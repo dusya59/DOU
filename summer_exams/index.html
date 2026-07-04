@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Трекер подготовки | ПНИПУ 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#1c2333;--border:#30363d;
+  --text:#e6edf3;--text2:#8b949e;--accent:#58a6ff;--green:#3fb950;
+  --yellow:#d29922;--red:#f85149;--purple:#bc8cff;
+  --bar-algebra:#58a6ff;--bar-informatics:#3fb950;--bar-russian:#bc8cff;
+  --radius:8px;--font:'JetBrains Mono','Courier New',monospace
+}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--text);font-family:var(--font);
+  font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased
+}
+#app{max-width:1200px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:20px;font-weight:700;letter-spacing:-0.5px;margin-bottom:20px}
+h2{font-size:15px;font-weight:600;margin-bottom:12px;color:var(--text2)}
+h3{font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px}
+
+/* timers */
+.timers{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
+.timer{font-size:13px;display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border)}
+.timer .label{color:var(--text2)}
+.timer .value{font-weight:600;font-variant-numeric:tabular-nums}
+.timer.green .value{color:var(--green)}
+.timer.yellow .value{color:var(--yellow)}
+.timer.red .value{color:var(--red)}
+
+/* subject tabs */
+.subject-tabs{display:flex;gap:4px;margin-bottom:16px}
+.subject-tabs button{
+  flex:1;padding:8px 6px;font-family:var(--font);font-size:12px;font-weight:500;
+  background:var(--bg2);color:var(--text2);border:1px solid var(--border);
+  border-radius:var(--radius);cursor:pointer;transition:.15s
+}
+.subject-tabs button:hover{background:var(--bg3);color:var(--text)}
+.subject-tabs button.active{background:var(--bg3);color:var(--text);border-color:var(--accent)}
+
+/* today section */
+.today-section{background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);padding:16px;margin-bottom:16px}
+.today-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.today-icon{font-size:28px;line-height:1}
+.today-subject{font-size:14px;font-weight:600}
+.progress-container{flex:1;max-width:200px}
+.progress-bar{height:6px;background:var(--bg);border-radius:3px;overflow:hidden}
+.progress-bar .fill{height:100%;border-radius:3px;transition:width .4s ease}
+.progress-bar .fill.algebra{background:linear-gradient(90deg,var(--bar-algebra),#79c0ff)}
+.progress-bar .fill.informatics{background:linear-gradient(90deg,var(--bar-informatics),#56d364)}
+.progress-bar .fill.russian{background:linear-gradient(90deg,var(--bar-russian),#d2a8ff)}
+.progress-text{font-size:11px;color:var(--text2);margin-top:2px}
+
+/* quest list */
+.quest-list{list-style:none;display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.quest-list li{
+  display:flex;align-items:center;gap:10px;padding:8px 10px;
+  background:var(--bg3);border-radius:6px;transition:background .2s
+}
+.quest-list li.done{opacity:.6}
+.quest-list li.done .quest-text{text-decoration:line-through;color:var(--text2)}
+.quest-list input[type=checkbox]{width:16px;height:16px;accent-color:var(--green);cursor:pointer;flex-shrink:0}
+.quest-text{flex:1;font-size:13px}
+.quest-topic{font-size:10px;color:var(--text2);padding:2px 6px;background:var(--bg);border-radius:4px;white-space:nowrap}
+
+/* add quest */
+.add-quest{display:flex;gap:8px}
+.add-quest input{
+  flex:1;padding:8px 12px;font-family:var(--font);font-size:13px;
+  background:var(--bg3);color:var(--text);border:1px solid var(--border);
+  border-radius:6px;outline:none;transition:border .2s
+}
+.add-quest input:focus{border-color:var(--accent)}
+.add-quest input::placeholder{color:var(--text2)}
+.add-quest button{
+  padding:8px 16px;font-family:var(--font);font-size:13px;font-weight:600;
+  background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;transition:.15s
+}
+.add-quest button:hover{opacity:.85}
+
+/* subject progress bars */
+.progress-section{background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);padding:16px;margin-bottom:16px}
+.subj-progress{display:flex;flex-direction:column;gap:10px}
+.subj-row{display:flex;align-items:center;gap:10px}
+.subj-row .name{width:120px;font-size:12px;font-weight:500;flex-shrink:0}
+.subj-row .bar{flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
+.subj-row .bar .fill{height:100%;border-radius:4px;transition:width .5s ease}
+.subj-row .pct{width:36px;text-align:right;font-size:12px;font-weight:600;color:var(--text2);flex-shrink:0}
+
+/* xp level */
+.xp-level{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.xp-level .level{font-size:13px;color:var(--text2)}
+.xp-level .level span{color:var(--accent);font-weight:700}
+.xp-level .xp-bar{flex:1;max-width:280px;margin:0 12px}
+.xp-level .xp-bar .bar{height:6px;background:var(--bg);border-radius:3px;overflow:hidden}
+.xp-level .xp-bar .bar .fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--accent));border-radius:3px;transition:width .4s ease}
+.xp-level .xp-val{font-size:12px;color:var(--text2)}
+
+/* stats */
+.stats-section{background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);padding:16px;margin-bottom:16px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-card{padding:10px;background:var(--bg3);border-radius:6px}
+.stat-card .stat-val{font-size:18px;font-weight:700;color:var(--text)}
+.stat-card .stat-label{font-size:11px;color:var(--text2);margin-top:2px}
+.stat-assessment{margin-top:12px;padding:10px 14px;border-radius:6px;font-size:13px;font-weight:500}
+.stat-assessment.good{background:rgba(63,185,80,.12);color:var(--green);border:1px solid rgba(63,185,80,.3)}
+.stat-assessment.warn{background:rgba(210,153,34,.12);color:var(--yellow);border:1px solid rgba(210,153,34,.3)}
+.stat-assessment.bad{background:rgba(248,81,73,.12);color:var(--red);border:1px solid rgba(248,81,73,.3)}
+
+/* links */
+.links-section{background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);padding:16px;margin-bottom:16px}
+.links-grid{display:flex;flex-wrap:wrap;gap:6px}
+.model-badge{font-size:10px;color:var(--text2);background:var(--bg3);padding:2px 8px;border-radius:4px;display:inline-block;margin-left:8px;vertical-align:middle}
+.links-grid a{
+  padding:6px 12px;font-size:12px;background:var(--bg3);color:var(--text2);
+  border:1px solid var(--border);border-radius:6px;text-decoration:none;transition:.15s
+}
+.links-grid a:hover{color:var(--accent);border-color:var(--accent);background:var(--bg)}
+
+/* reset btn */
+.reset-btn{
+  display:block;width:100%;padding:10px;font-family:var(--font);font-size:13px;
+  background:transparent;color:var(--red);border:1px solid var(--border);
+  border-radius:var(--radius);cursor:pointer;transition:.15s
+}
+.reset-btn:hover{background:rgba(248,81,73,.1);border-color:var(--red)}
+
+/* modal */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;
+  z-index:1000;opacity:0;visibility:hidden;transition:.2s
+}
+.modal-overlay.open{opacity:1;visibility:visible}
+.modal{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:24px;max-width:380px;width:90%;text-align:center
+}
+.modal p{font-size:14px;margin-bottom:16px}
+.modal-actions{display:flex;gap:8px;justify-content:center}
+.modal-actions button{
+  padding:8px 20px;font-family:var(--font);font-size:13px;font-weight:500;
+  border-radius:6px;cursor:pointer;transition:.15s;border:1px solid var(--border)
+}
+.modal-actions .btn-cancel{background:var(--bg3);color:var(--text)}
+.modal-actions .btn-confirm{background:var(--red);color:#fff;border-color:var(--red)}
+.modal-actions .btn-cancel:hover{background:var(--bg)}
+.modal-actions .btn-confirm:hover{opacity:.85}
+
+/* confetti canvas */
+#confetti-canvas{
+  position:fixed;inset:0;pointer-events:none;z-index:9999
+}
+
+/* test section */
+.test-section{background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);padding:16px;margin-bottom:16px}
+.test-section h3{margin:0 0 12px}
+.test-header{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.test-header .test-title{flex:1;font-size:14px;color:var(--text);min-width:0}
+.test-gen-btn{background:#238636;color:#fff;border:none;border-radius:6px;padding:8px 18px;font:inherit;font-size:14px;cursor:pointer;transition:background .2s;white-space:nowrap}
+.test-gen-btn:hover{background:#2ea043}
+.test-gen-btn:disabled{opacity:.5;cursor:not-allowed}
+.test-gen-btn.loading{pointer-events:none;opacity:.7}
+.test-error{color:var(--red);font-size:13px;margin-top:8px}
+.test-loading{padding:24px 0;text-align:center;color:var(--text2);font-size:14px}
+.test-form{margin-top:8px}
+.test-question{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:12px;transition:border-color .2s}
+.test-question.correct{border-color:var(--green);background:rgba(63,185,80,.08)}
+.test-question.wrong{border-color:var(--red);background:rgba(248,81,73,.08)}
+.test-question .q-text{font-size:14px;color:var(--text);margin-bottom:10px;line-height:1.5}
+.test-question .q-num{color:var(--accent);font-weight:600;margin-right:6px}
+.test-question .options{display:flex;flex-direction:column;gap:6px}
+.test-question .option{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;transition:background .15s;font-size:13px;color:var(--text2)}
+.test-question .option:hover{background:var(--bg)}
+.test-question .option input[type="radio"]{appearance:none;-webkit-appearance:none;width:16px;height:16px;min-width:16px;border:2px solid #484f58;border-radius:50%;margin-top:2px;cursor:pointer;transition:border-color .15s,background .15s}
+.test-question .option input[type="radio"]:checked{border-color:var(--accent);background:var(--accent)}
+.test-question .option input[type="radio"]:checked::after{content:'';position:absolute;top:2px;left:2px;width:8px;height:8px;background:var(--bg);border-radius:50%}
+.test-question .option .opt-label{cursor:pointer;user-select:none;flex:1}
+.test-question .option .mark{font-size:15px;min-width:18px;text-align:center}
+.test-check-btn{background:#1f6feb;color:#fff;border:none;border-radius:6px;padding:10px 24px;font:inherit;font-size:14px;cursor:pointer;transition:background .2s;margin-top:8px}
+.test-check-btn:hover{background:#388bfd}
+.test-check-btn:disabled{opacity:.5;cursor:not-allowed}
+.test-result{margin-top:16px;padding:14px 18px;border-radius:8px;text-align:center;font-size:16px}
+.test-result.good{background:rgba(63,185,80,.12);color:var(--green);border:1px solid rgba(63,185,80,.3)}
+.test-result.ok{background:rgba(210,153,34,.12);color:var(--yellow);border:1px solid rgba(210,153,34,.3)}
+.test-result.bad{background:rgba(248,81,73,.12);color:var(--red);border:1px solid rgba(248,81,73,.3)}
+.test-body{display:flex;gap:16px;align-items:flex-start}
+.test-form-wrap{flex:1;min-width:0}
+#test-split-wrap{display:flex;gap:16px;margin-bottom:16px;align-items:flex-start}
+#test-split-wrap>.test-section{flex:1;min-width:0;margin-bottom:0}
+#test-split-wrap>.lesson-panel{flex:1;min-width:0;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);padding:16px;position:sticky;top:5px;align-self:flex-start}
+.lesson-panel .lesson-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.lesson-panel .lesson-title .lesson-nav{background:none;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:11px;padding:2px 6px;color:var(--text2);transition:.15s}
+.lesson-panel .lesson-title .lesson-nav:hover{background:var(--bg3);color:var(--text)}
+.lesson-panel .lesson-title .lesson-nav.disabled{opacity:.3;cursor:not-allowed;pointer-events:none}
+.lesson-panel .lesson-title .lesson-title-text{flex:1;text-align:center}
+.lesson-panel .lesson-content{font-size:14px;line-height:1.7;color:var(--text);white-space:pre-wrap}
+.lesson-panel .lesson-content b{color:var(--accent)}
+.lesson-panel .lesson-loading{text-align:center;color:var(--text2);padding:24px 0;font-size:14px}
+.lesson-btn{background:none;border:none;cursor:pointer;font-size:12px;color:var(--accent);padding:2px 6px;border-radius:4px;transition:background .15s;margin-left:8px;vertical-align:middle}
+.lesson-btn:hover{background:rgba(88,166,255,.1)}
+.lesson-btn:disabled{opacity:.4;cursor:not-allowed}
+.explanation{margin-top:10px;padding:8px 12px;background:var(--bg3);border-radius:6px;font-size:13px;line-height:1.6;color:var(--text2);border-left:2px solid var(--accent)}
+@media(max-width:640px){#test-split-wrap{flex-direction:column}}
+
+/* scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* no-quests placeholder */
+.no-quests{padding:20px;text-align:center;color:var(--text2);font-size:13px}
+
+/* ai generate button */
+.ai-gen-wrap{margin-top:10px}
+.ai-gen-btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  padding:9px 14px;font-family:var(--font);font-size:13px;font-weight:500;
+  background:var(--bg3);color:var(--accent);border:1px dashed var(--border);
+  border-radius:6px;cursor:pointer;transition:.15s
+}
+.ai-gen-btn:hover{background:var(--bg);border-color:var(--accent)}
+.ai-gen-btn:disabled{opacity:.5;cursor:wait;border-style:solid}
+.ai-gen-btn .spinner{display:none;width:14px;height:14px;border:2px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite}
+.ai-gen-btn.loading .spinner{display:inline-block}
+.ai-gen-btn.loading .label{opacity:.7}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ai-gen-btn .icon{font-size:15px}
+
+@media(max-width:500px){
+  #app{padding:16px 12px 32px}
+  .subj-row .name{width:90px;font-size:11px}
+  .stats-grid{grid-template-columns:1fr}
+  .timer{font-size:12px;padding:8px 10px}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <h1>◈ Экзамены ПНИПУ 2026</h1>
+    <div class="timers">
+      <div class="timer green" id="timer-deadline">
+        <span class="label">Дедлайн подготовки</span>
+        <span class="value" id="deadline-value">--:--:--:--</span>
+      </div>
+      <div class="timer" id="timer-exam">
+        <span class="label">До экзаменов</span>
+        <span class="value" id="exam-value">--:--:--:--</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="subject-tabs" id="subject-tabs"></div>
+
+    <section class="today-section" id="today-section">
+      <div class="today-header">
+        <span class="today-icon" id="today-icon"></span>
+        <span class="today-subject" id="today-subject"></span>
+        <div class="progress-container">
+          <div class="progress-bar"><div class="fill" id="today-progress-fill" style="width:0%"></div></div>
+          <div class="progress-text" id="today-progress-text">0%</div>
+        </div>
+      </div>
+      <ul class="quest-list" id="quest-list"></ul>
+      <div class="add-quest">
+        <input type="text" id="quest-input" placeholder="Добавить свою задачу..." maxlength="120">
+        <button id="quest-add-btn">+</button>
+      </div>
+      <div class="ai-gen-wrap" id="ai-gen-wrap">
+        <button class="ai-gen-btn" id="ai-gen-btn">
+          <span class="spinner"></span>
+          <span class="icon">🤖</span>
+          <span class="label">Сгенерировать задачу AI</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="progress-section">
+      <h3>Прогресс предметов</h3>
+      <div class="subj-progress" id="subj-progress"></div>
+      <div class="xp-level">
+        <div class="level">Уровень <span id="level-val">1</span></div>
+        <div class="xp-bar">
+          <div class="bar"><div class="fill" id="xp-fill" style="width:0%"></div></div>
+        </div>
+        <div class="xp-val"><span id="xp-current">0</span> / <span id="xp-next">100</span> XP</div>
+      </div>
+    </section>
+
+    <section class="stats-section">
+      <h3>Статистика</h3>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div class="stat-assessment" id="stat-assessment"></div>
+    </section>
+
+    <section class="links-section">
+      <h3>Полезные ссылки</h3>
+      <div class="links-grid">
+        <a href="https://sdamgia.ru" target="_blank" rel="noopener">РешуЕГЭ</a>
+        <a href="https://ege.yandex.ru" target="_blank" rel="noopener">Яндекс.Репетитор</a>
+        <a href="https://fipi.ru" target="_blank" rel="noopener">ФИПИ</a>
+        <a href="https://exam.ru" target="_blank" rel="noopener">Exam.ru</a>
+        <a href="https://stepik.org" target="_blank" rel="noopener">Stepik</a>
+        <a href="https://foxford.ru" target="_blank" rel="noopener">Фоксфорд</a>
+        <a href="https://ege.sdamgia.ru" target="_blank" rel="noopener">СдамГИА</a>
+      </div>
+    </section>
+
+    <section class="test-section" id="test-section">
+      <h3>Тренировочный тест</h3>
+      <div class="test-header">
+        <span class="test-title" id="test-title">Нажмите «Сгенерировать тест», чтобы получить 15 вопросов по сегодняшнему предмету</span>
+        <button class="test-gen-btn" id="test-gen-btn">🤖 Сгенерировать тест</button>
+      </div>
+      <div class="test-body">
+        <div class="test-form-wrap" id="test-form-wrap">
+          <div id="test-content"></div>
+        </div>
+      </div>
+    </section>
+
+    <button class="reset-btn" id="reset-btn">Сбросить весь прогресс</button>
+  </main>
+</div>
+
+<div class="modal-overlay" id="reset-modal">
+  <div class="modal">
+    <p>Вы уверены, что хотите сбросить весь прогресс?<br>Это действие <strong>нельзя отменить</strong>.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="modal-cancel">Отмена</button>
+      <button class="btn-confirm" id="modal-confirm">Сбросить всё</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="confetti-canvas"></canvas>
+
+<script>
+// ============================================================
+// CONSTANTS
+// ============================================================
+const PERM_OFFSET = 5 * 60 * 60 * 1000;
+const START_DATE = new Date('2026-07-02T00:00:00+05:00');
+const DEADLINE = new Date('2026-07-10T17:00:00+05:00');
+const EXAM_START = new Date('2026-07-13T00:00:00+05:00');
+const XP_PER_QUEST = 10;
+const XP_PER_LEVEL = 100;
+const LS_KEY = 'pnipu_tracker';
+
+// ============================================================
+// SUBJECTS DATA
+// ============================================================
+const subjects = [
+  {
+    id: 'algebra', name: 'Алгебра и начала мат. анализа', shortName: 'Алгебра',
+    icon: '📐',
+    topics: [
+      { id: 'alg-fsu', title: 'Формулы сокращённого умножения', quests: ['Реши 10 задач на формулы сокращённого умножения', 'Повтори вывод основных формул'] },
+      { id: 'alg-log', title: 'Логарифмы: свойства, уравнения, неравенства', quests: ['Реши 15 логарифмических уравнений', 'Повтори свойства логарифмов и реши 10 неравенств'] },
+      { id: 'alg-trig', title: 'Тригонометрия: основное тождество, уравнения, формулы двойного угла', quests: ['Реши 12 тригонометрических уравнений', 'Докажи основное тригонометрическое тождество и реши 8 задач'] },
+      { id: 'alg-quad', title: 'Квадратные уравнения и неравенства', quests: ['Реши 15 квадратных уравнений и неравенств', 'Разбери метод интервалов на 10 примерах'] },
+      { id: 'alg-mod', title: 'Уравнения и неравенства с модулем', quests: ['Реши 10 уравнений с модулем', 'Реши 8 неравенств с модулем'] },
+      { id: 'alg-exp', title: 'Показательные уравнения и неравенства', quests: ['Реши 12 показательных уравнений', 'Реши 10 показательных неравенств'] },
+      { id: 'alg-irr', title: 'Иррациональные уравнения', quests: ['Реши 10 иррациональных уравнений', 'Реши 8 иррациональных неравенств'] },
+      { id: 'alg-param', title: 'Уравнения с параметром', quests: ['Реши 8 уравнений с параметром', 'Разбери 5 задач с параметром из ЕГЭ'] },
+      { id: 'alg-plan', title: 'Планиметрия (треугольники, трапеции, окружности, площади)', quests: ['Реши 10 задач по планиметрии', 'Повтори формулы площадей и реши 8 задач'] }
+    ]
+  },
+  {
+    id: 'informatics', name: 'Информационные технологии', shortName: 'Информатика',
+    icon: '💻',
+    topics: [
+      { id: 'inf-lifecycle', title: 'Жизненный цикл разработки ПО', quests: ['Опиши этапы жизненного цикла ПО', 'Разбери 3 модели разработки и сравни их'] },
+      { id: 'inf-tables', title: 'Электронные таблицы: функции МАКС, СУММ, СЧЁТ, формулы', quests: ['Реши 10 задач на функции в электронных таблицах', 'Составь 5 сложных формул с комбинированием функций'] },
+      { id: 'inf-oop', title: 'ООП: наследование, инкапсуляция, полиморфизм', quests: ['Дай определения трём принципам ООП с примерами', 'Напиши 3 примера кода для каждого принципа'] },
+      { id: 'inf-net', title: 'Сети и протоколы, модель OSI', quests: ['Перечисли и опиши 7 уровней модели OSI', 'Разбери 5 сетевых протоколов и их назначение'] },
+      { id: 'inf-info', title: 'Теория информации: формулы Шеннона и Хартли', quests: ['Реши 8 задач на формулу Хартли', 'Реши 8 задач на формулу Шеннона'] },
+      { id: 'inf-db', title: 'Базы данных: типы ключей, разграничение доступа', quests: ['Опиши типы ключей в БД с примерами', 'Составь 5 SQL-запросов с JOIN'] },
+      { id: 'inf-logic', title: 'Алгебра логики: таблицы истинности, конъюнкция / дизъюнкция / импликация', quests: ['Построй таблицы истинности для 5 выражений', 'Реши 10 задач на преобразование логических выражений'] },
+      { id: 'inf-gfx', title: 'Растровая и векторная графика', quests: ['Сравни растровую и векторную графику (5 критериев)', 'Реши 5 задач на расчёт объёма растрового изображения'] },
+      { id: 'inf-fs', title: 'Файловые системы и расчёт размера на диске (кластеры)', quests: ['Реши 8 задач на расчёт размера в кластерах', 'Опиши структуру файловой системы NTFS'] },
+      { id: 'inf-algo', title: 'Алгоритмы: разбор блок-схем', quests: ['Выполни трассировку 3 блок-схем', 'Составь блок-схему для 3 алгоритмов'] }
+    ]
+  },
+  {
+    id: 'russian', name: 'Русский язык', shortName: 'Русский',
+    icon: '📖',
+    topics: [
+      { id: 'rus-ortho', title: 'Орфография: приставки на З/С, непроизносимые согласные, Ъ после приставок, Н/НН', quests: ['Вставь пропущенные буквы в 20 словах', 'Объясни правописание 15 слов с Н/НН'] },
+      { id: 'rus-defis', title: 'Дефисное написание сложных слов', quests: ['Напиши 20 сложных слов и объясни дефисное написание', 'Составь 10 предложений со сложными словами'] },
+      { id: 'rus-punct', title: 'Пунктуация: тире в простом предложении, запятые при однородных членах / деепричастных оборотах, двоеточие', quests: ['Расставь знаки препинания в 15 предложениях', 'Объясни постановку тире и двоеточия в 10 примерах'] },
+      { id: 'rus-spp', title: 'Сложноподчинённые предложения', quests: ['Разбери 10 СПП и определи тип придаточной части', 'Составь схемы для 8 сложноподчинённых предложений'] },
+      { id: 'rus-speech', title: 'Прямая и косвенная речь', quests: ['Переделай 10 предложений из прямой речи в косвенную', 'Расставь знаки препинания в 10 предложениях с прямой речью'] },
+      { id: 'rus-deeprich', title: 'Деепричастный оборот (типичные ошибки)', quests: ['Найди и исправь ошибки в 10 предложениях с деепричастными оборотами', 'Составь 8 предложений с правильным употреблением'] },
+      { id: 'rus-lex', title: 'Лексика: паронимы, синонимы, фразеологизмы, орфоэпия (ударения)', quests: ['Разбери 15 пар паронимов и составь предложения', 'Расставь ударения в 20 словах, объясни значения'] }
+    ]
+  }
+];
+
+// ============================================================
+// AI TEST CONTEXT (embedded from test_*.txt files)
+// ============================================================
+const AI_CONTEXT = {
+  algebra: [
+    'ФГАОУ ВО «Пермский национальный исследовательский политехнический университет»',
+    'Алгебра и начала математического анализа. Вариант X',
+    '1. Если a=1, b=9, то a^3 - 3a^2*b + 3ab^2 - b^3 равно. Ответы: 1) 510 2) 512 3) 946 4) -510 5) -512',
+    '2. Значение log_4(256) равно. Ответы: 1) 1 2) 2 3) 3 4) 4 5) 5',
+    '3. Значение sin^2(40°) + cos^2(40°) равно. Ответы: 1) 0,75 2) 0,5 3) 1 4) 0,25 5) 0,995',
+    '4. Корень уравнения x^2 - 4x + 4 = 0 равен. Ответы: 1) -1 2) 1 3) -2 4) 2 5) корней нет',
+    '5. Решением неравенства x^2 - 4x < 0 является множество чисел. Ответы: 1) (-∞;0)∪(4;+∞) 2) (-∞;0) 3) (0;4) 4) (4;+∞) 5) (0;+∞)',
+    '6. Количество корней уравнения |x^2 - 6| = 1 равно. Ответы: 1) 0 2) 1 3) 2 4) 3 5) 4',
+    '7. Множество всех решений неравенства |3x - 2| ≤ 1 имеет вид. Ответы: 1) (-∞;1/3] 2) (-∞;1/3]∪[1;+∞) 3) [1/3;1] 4) [0;1] 5) [1;+∞)',
+    '8. Меньший из корней уравнения (x^2-2)*√(x^2+4) = 0 содержится в интервале. Ответы: 1) (-2;0) 2) (-∞;-2] 3) [0;2) 4) [2;4) 5) (4;+∞)',
+    '9. Уравнение 0,3^(-2x) = 3*(1/3) имеет корень из промежутка. Ответы: 1) (-∞;-2] 2) (-2;-1] 3) [1;+∞) 4) (-1;0] 5) (0;1)',
+    '10. Все решения неравенства 6^(x-3) ≥ 36 образуют множество. Ответы: 1) (-∞;-5] 2) [5;+∞) 3) (-∞;-5]∪[5;+∞) 4) [0;5] 5) (-∞;5]',
+    '11. Произведение корней уравнения log_0,1(x^2-4) = 0 равно. Ответы: 1) -5 2) √5 3) -√5 4) 5 5) 5√5',
+    '12. Множество всех решений неравенства 0,2*log_3(1/x-1) > 1 имеет вид. Ответы: 1) (1/244;+∞) 2) (0;1/244) 3) (-∞;1/244) 4) (1;+∞) 5) (0;1)',
+    '13. Количество целых значений a, при которых уравнение |x-a^2| = 3-a имеет корни разных знаков. Ответы: 1) 0 2) 1 3) 2 4) 3 5) 4',
+    '14. Число решений уравнения cos(2x)=sin(x)-2sin^3(x) на (0;3π/2). Ответы: 1) 1 2) 0 3) 2 4) 4 5) 3',
+    '15. Точка на гипотенузе, равноудаленная от обоих катетов, делит ее на 6 и 8. Длина большего катета. Ответы: 1) 12 2) 11,2 3) 12,3 4) 10,5 5) 13',
+    '---',
+    'Алгебра и начала математического анализа. Вариант Y',
+    '1. Разность 7778^2 - 2223^2 равна. Ответы: 1) 55555555 2) 44444444 3) 555555 4) 4444444 5) другой ответ',
+    '2. Значение 5^(2*log_25(3)) равно. Ответы: 1) 2 2) √3 3) 6√3 4) 3 5) 2√3',
+    '3. sin^2(60°)-cos^2(60°) равно. Ответы: 1) √3/2 2) -√3/2 3) 0 4) 1/2 5) -1/2',
+    '4. Сумма корней x^2-10x+3=0. Ответы: 1) 12 2) -12 3) 10 4) -10 5) 5',
+    '5. Решение x^2-13x+36≤0. Ответы: 1) [0;+∞) 2) (-∞;4] 3) [9;+∞) 4) [2;9] 5) [4;9]',
+    '6. x0 - меньший корень |3x^2-6|=11, (x0)^2 равно. Ответы: 1) 25/9 2) 5/3 3) √(5/3) 4) 4 5) 17/3',
+    '7. Целых решений |1-3x|>1. Ответы: 1) ∞ 2) 2 3) 3 4) 4 5) 5',
+    '8. Произведение корней ∛(x^2-3)=1. Ответы: 1) 1 2) 3 3) -3 4) 4 5) -4',
+    '9. Корень 2^(3√x-5)=1/4 принадлежит. Ответы: 1) (-∞;-1] 2) (-1;1) 3) [1;2) 4) [2;5) 5) (5;+∞)',
+    '10. Наибольшее целое 0,25^(3x)>4^(2x+1). Ответы: 1) -2 2) -1 3) 0 4) 1 5) 2',
+    '11. Корень log_0,5(1/x+4)=1. Ответы: 1) -7/2 2) 1/3 3) -1/3 4) 2/7 5) -2/7',
+    '12. Наибольшее целое log_2(2^x-4)≤2. Ответы: 1) 1 2) 2 3) 3 4) 4 5) 6',
+    '13. a при которых sin^2(x)=1 и a*cos(x)=sin(2x) равносильны. Ответы: 1) (-∞;-2]∪[2;∞) 2) [-2;2] 3) (-2;2) 4) (-∞;-2)∪(2;∞) 5) (-∞;∞)',
+    '14. Решение 2cos(4x)=√2(cos(x)-sin(x)). Ответы: 1) π/8 2) π/12 3) π/20 4) -π/12 5) -3π/4',
+    '15. Равнобочная трапеция описана около окружности, большее основание видно из центра под 120°, S=50√3. Боковая сторона. Ответы: 1) 10√3 2) 10 3) 12 4) 12/√3 5) 8√3'
+  ].join('\n'),
+  informatics: [
+    'ФГАОУ ВО «Пермский национальный исследовательский политехнический университет»',
+    'Информационные технологии. Вариант Y',
+    '1. Сетевым протоколом является... 1) инструкция 2) набор правил 3) программа 4) набор программ',
+    '2. Последовательность этапов разработки ПО (А:Сопровождение, Б:Документирование, В:Кодирование, Г:Тестирование, Д:Проектирование, Е:Анализ требований). Варианты порядка.',
+    '3. Фрагмент таблицы: A1=1, A2=2, B1=2, B3=МАКС(A1:B2;A1+B2;A2+A1). Значение B3? 1)1 2)3 3)5 4)4',
+    '4. Основной элемент растрового изображения. 1) отрезок 2) точка 3) линия 4) штрих',
+    '5. Расширение файла позволяет определить... 1) атрибуты 2) время проверки 3) размер 4) приложение для создания',
+    '6. В отношении "объект-модель" находятся... 1) знания-оценка 2) книга-абзац 3) дом-план комнат 4) микромир-механика',
+    '7. Формула Шеннона I=-Σ(pi*log2(pi)) для... 1) кол-ва информации 2) кол-ва событий 3) символов 4) наборов информации',
+    '8. Стандарты форм представления и пересылки сообщений, правила совместной работы оборудования в сетях. 1) протоколы 2) терминалы 3) программы 4) стандарты',
+    '9. На этапе отладки программы... 1) проверка корректности 2) мат.модель 3) анализ физ.характеристик 4) состав входных данных',
+    '10. Фрагмент: A1=1, A2=2, B1=2, B2=3, B3=МАКС(A1:B2;A1+B2;A2+A1). Значение B3? 1)3 2)5 3)4 4)8',
+    '11. Photo Editor это... 1) формат файлов 2) редактор растровых 3) редактор векторных 4) система цвета',
+    '12. Кластер 512 байт, файл 816 байт — сколько кластеров? 1) 1,5 2) 3 3) 1 4) 2',
+    '13. На производительность МПС не влияет... 1) кол-во внешних устройств 2) частота 3) разрядность шины 4) интерфейс памяти',
+    '14. Для объединения устройств ПК используется... 1) системная шина 2) шифратор 3) блок управления 4) интерфейсный блок',
+    '15. Таблица истинности A B F: 1 1 1, 1 0 1, 0 1 1, 0 0 0 — это... 1) импликация 2) инверсия 3) конъюнкция 4) дизъюнкция',
+    '---',
+    'Информационные технологии. Вариант X',
+    '1. Порождение иерархии объектов — это... 1) полиморфизм 2) наследование 3) инкапсуляция 4) вызов метода',
+    '2. Представление файлов и каталогов — это ___ модель. 1) сетевая 2) иерархическая 3) табличная 4) алгоритмическая',
+    '3. COM-порты обеспечивают... 1) устранение помех 2) разграничение доступа 3) увеличение полосы 4) синхронную/асинхронную передачу',
+    '4. Криптосистема — это... 1) семейство обратимых преобразований 2) аппаратная защита 3) НСД 4) необратимых преобразований',
+    '5. A1=1, A2=2, B1=2, B3=СУММ(A1:B2;A2). Значение B3? 1)3 2)5 3)1 4)7',
+    '6. В ООП объект по отношению к классу — это... 1) функция 2) экземпляр 3) метод 4) код',
+    '7. Свойство видеосистемы, размер изображения на экране целиком — ... 1) разрешение изображения 2) разрешение экрана 3) принтера 4) физический размер',
+    '8. Порядок этапов моделирования (постановка-концепция-формализация-алгоритм-эксперименты-анализ). Варианты.',
+    '9. Формула H(α)=-Σ(Pi*log2(Pi)) — это энтропия... 1) Шеннона 2) Хартли 3) Шнейдера 4) Ланье',
+    '10. A1=1, A2=2, B1=2, B3=СЧЕТ(A1:B2;A2). Значение? 1)5 2)3 3)4 4)2',
+    '11. Ключи в БД: дополнительный, простой, включающий, составной, отчетный, первичный, запросный. Какие верны?',
+    '12. Передача входных данных при вызове подпрограммы — через... 1) модули 2) файлы 3) параметры 4) операторы',
+    '13. Алгоритм: i=2, цикл пока i≠N: A[i]=i*i, i=i+2. N=8. A2,A4,A6,A8=? 1)2,4,16,32 2)4,16,36,64 3)4,16,32,48 4)4,12,24,36',
+    '14. Сканирование книги — это ___ данных. 1) верификация 2) архивирование 3) транспортировка 4) преобразование',
+    '15. Уровни разграничения доступа к данным в полях БД. 1) нормализация 2) контроль и верификация 3) обработка и идентификация 4) полный запрет/чтение/все операции'
+  ].join('\n'),
+  russian: [
+    'ФГБОУ ВО «Пермский национальный исследовательский политехнический университет»',
+    'Русский язык. Вариант №',
+    'Отметьте один правильный ответ в каждом тесте.',
+    '1. Отметьте слово с З: 1) сни_ходительный 2) чре_мерный 3) пере_петь 4) ра_садник 5) _двоенный',
+    '2. Отметьте слово с непроизносимой согласной: 1) ровес_ник 2) с_рам 3) парус_ный 4) вес_ник 5) блес_на',
+    '3. Отметьте слово с твердым знаком: 1) пред_операционный 2) медал_он 3) об_ыграть 4) солов_и 5) ин_екция',
+    '4. Отметьте слово с НН: 1) ю(н,нн)ость 2) сви(н,нн)ой 3) оцинкова(н,нн)ый 4) жева(н,нн)ая 5) муче(н,нн)ик',
+    '5. Отметьте дефисное написание: 1) (дико)растущий 2) (светло)волосый 3) (человек)оркестр 4) (аудио)запись 5) (бело)гвардейский',
+    '6. Где нужно тире? 1) «Что же ты не едешь?»_ спросил я. 2) закончив разговор, я отключил телефон_ вдруг кто-нибудь позвонит. 3) карточка_ недействительна. 4) Любая нерешенная задача_ есть тайна. 5) компьютер_ словно целый мир.',
+    '7. Где одна запятая? 1) Несмотря на ранний час улицы были полны. 2) Вместо ответа ему подали письмо. 3) Разве ты имея деньги не тратил бы? 4) Вскочила и с невнятным возгласом бросилась. 5) Когда дует ветер пески издают гул.',
+    '8. Где две запятые? 1) Мы приносили чай и бульон читали вслух отчего она улыбалась. 2) на улице на которой не смотря на ветер жизнь кипела. 3) Как говорится поделом вору и мука. 4) Не бойся собаки что лает а бойся той что молчит. 5) Саша по слухам правнук генерал-фельдмаршала.',
+    '9. Где двоеточие? 1) Я_ абитуриент. 2) Смелые побеждают_ трусливые погибают. 3) Жизнь_ прекрасна. 4) Неплохой игрок_ этот парень! 5) В танце есть все_ музыка, мимика, жест.',
+    '10. Где не ставится запятая? 1) Рассказ вошел в книгу как глава. 2) предположение вытекающее из теории которое еще не подтверждено есть гипотеза. 3) Чувствовалось что помочь невозможно. 4) Когда встретимся расскажу. 5) Утверждение что психика определяется образом жизни справедливо.',
+    '11. Значение «поступательное движение, совершенствование»? 1) регресс 2) арьергард 3) революция 4) прогресс 5) деградация',
+    '12. Неправильное ударение: 1) тАможня 2) шАрфы 3) процЕнт 4) придАное 5) знАчимый',
+    '13. Чужая речь выражена неправильно: 1) сказал что мы считаемся гуманитариями. 2) начальник спросил что кто знает? 3) «Пожар!» – раздался крик. 4) «Это плохо?» – жуя спросил он. 5) «Идите, – сказал он. – Я тоже приду».',
+    '14. Неправильно употреблен деепричастный оборот: 1) Перейдя дорогу сели в такси. 2) Рассматривая психику как систему ученые демонстрируют подход. 3) Уезжая из поселка мне бывает грустно. 4) Вернувшись домой мы поужинали. 5) Подумав он согласился.',
+    '15. Синоним «разделать под орех»? 1) столярничать 2) сильно ругать 3) плотничать 4) украшать 5) плохо работать'
+  ].join('\n')
+};
+
+// ============================================================
+// OMNIROUTE SETTINGS
+// ============================================================
+const OMNIROUTE_URL = 'http://localhost:20128/v1/chat/completions';
+let omniRouteAvailable = false;
+
+// ============================================================
+// STATE
+// ============================================================
+let state = null;
+
+function defaultState() {
+  return {
+    lastOpenDate: '',
+    manualSubjectId: null,
+    completedQuestTemplates: {}, // { 'algebra': { 'alg-fsu': [0, 1] } } — which quest indices per topic are done
+    completedTopics: {},        // { 'algebra': { 'alg-fsu': true } }
+    dailyQuests: null,          // array of { id, text, topicId, subjectId, questIdx, done }
+    customQuests: [],           // { id, text, done }
+    xp: 0,
+    level: 1,
+    totalTasksDone: 0,
+    dailyDate: ''               // date string for which dailyQuests were generated
+  };
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return { ...defaultState(), ...parsed };
+    }
+  } catch (e) { /* ignore */ }
+  return defaultState();
+}
+
+function saveState() {
+  localStorage.setItem(LS_KEY, JSON.stringify(state));
+}
+
+// ============================================================
+// TIME HELPERS
+// ============================================================
+function getPermNow() {
+  const now = new Date();
+  return new Date(now.getTime() + now.getTimezoneOffset() * 60000 + PERM_OFFSET);
+}
+
+function getPermDateStr() {
+  const p = getPermNow();
+  return p.getFullYear() + '-' +
+    String(p.getMonth() + 1).padStart(2, '0') + '-' +
+    String(p.getDate()).padStart(2, '0');
+}
+
+function daysBetween(a, b) {
+  const ta = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+  const tb = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round((tb - ta) / 86400000);
+}
+
+// ============================================================
+// SUBJECT ROTATION
+// ============================================================
+function getSubjectForDay(dateStr) {
+  if (state.manualSubjectId) {
+    return subjects.find(s => s.id === state.manualSubjectId) || subjects[0];
+  }
+  const d = new Date(dateStr + 'T00:00:00+05:00');
+  const diff = daysBetween(START_DATE, d);
+  const idx = ((diff % 3) + 3) % 3;
+  return subjects[idx];
+}
+
+function getSubjectById(id) {
+  return subjects.find(s => s.id === id);
+}
+
+// ============================================================
+// DAILY QUESTS GENERATION
+// ============================================================
+function generateDailyQuests(subject) {
+  const topics = [...subject.topics];
+  const count = Math.min(topics.length, 3 + Math.floor(Math.random() * 3));
+  const shuffled = topics.sort(() => Math.random() - 0.5).slice(0, count);
+  const quests = [];
+  shuffled.forEach(topic => {
+    const idx = Math.floor(Math.random() * topic.quests.length);
+    quests.push({
+      id: 'q_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+      text: topic.quests[idx],
+      topicId: topic.id,
+      subjectId: subject.id,
+      questIdx: idx,
+      done: false
+    });
+  });
+  return quests;
+}
+
+// ============================================================
+// OMNIROUTE CLIENT
+// ============================================================
+async function checkOmniRoute() {
+  try {
+    const resp = await fetch(OMNIROUTE_URL.replace('/v1/chat/completions', '/v1/models'), {
+      signal: AbortSignal.timeout(3000)
+    });
+    omniRouteAvailable = resp.ok;
+  } catch { omniRouteAvailable = false; }
+  const wrap = document.getElementById('ai-gen-wrap');
+  if (wrap) wrap.style.display = omniRouteAvailable ? '' : 'none';
+  const testSection = document.getElementById('test-section');
+  if (testSection) testSection.style.display = omniRouteAvailable ? '' : 'none';
+}
+
+async function generateAIQuest() {
+  const btn = document.getElementById('ai-gen-btn');
+  if (btn.classList.contains('loading')) return;
+  btn.classList.add('loading');
+
+  const todayStr = getPermDateStr();
+  const subject = getSubjectForDay(todayStr);
+  const context = AI_CONTEXT[subject.id] || '';
+
+  try {
+    const prompt = 'Сгенерируй ровно ОДНО новое задание по дисциплине "' + subject.name + '". Ориентируйся на стиль приведённых ниже примеров, но не копируй их.\n\nПримеры:\n' + context + '\n\nФормат ответа (строго):\nВОПРОС: [текст]\nА) [вариант]\nБ) [вариант]\nВ) [вариант]\nГ) [вариант]\nПРАВИЛЬНЫЙ: [буква]\n---EXPLANATION---\nКраткое пояснение: [1-2 предложения]';
+
+    const resp = await fetch(OMNIROUTE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'auto/smart',
+        messages: [
+          { role: 'system', content: 'Ты — методист ПНИПУ. Генерируешь экзаменационные тестовые задания в строгом академическом стиле. Правила: Только текст задания. Без вступлений, без пояснений, без мета-комментариев. Каждое задание содержит: вопрос, 4 варианта ответа (А, Б, В, Г), указание правильного варианта. Сложность: бакалавриат 1–2 курс. Объём вопроса: 1–2 предложения.' },
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 500,
+        stream: true,
+        thinking: { type: 'disabled' }
+      })
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error('OmniRoute error: ' + resp.status + ' ' + errText);
+    }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullContent = '';
+    currentModel = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith('data: ')) continue;
+        const jsonStr = trimmed.slice(6);
+        if (jsonStr === '[DONE]') continue;
+        try {
+          const chunk = JSON.parse(jsonStr);
+          if (chunk.model) currentModel = chunk.model;
+          const delta = chunk.choices?.[0]?.delta;
+          if (delta?.content) fullContent += delta.content;
+        } catch {}
+      }
+    }
+
+    fullContent = fullContent.trim();
+    if (!fullContent) throw new Error('Пустой ответ от AI');
+
+    // Add as custom quest
+    if (!state.customQuests) state.customQuests = [];
+    state.customQuests.push({
+      id: 'ai_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+      text: fullContent,
+      done: false,
+      aiGenerated: true
+    });
+    saveState();
+    renderToday();
+    renderStats();
+
+  } catch (err) {
+    console.error('AI generation failed:', err);
+    alert('Ошибка генерации: ' + err.message);
+  } finally {
+    btn.classList.remove('loading');
+  }
+}
+
+// ============================================================
+// RENDER FUNCTIONS
+// ============================================================
+function renderSubjectTabs() {
+  const container = document.getElementById('subject-tabs');
+  const current = getSubjectForDay(getPermDateStr());
+  container.innerHTML = subjects.map(s =>
+    `<button class="${s.id === current.id ? 'active' : ''}" data-subject="${s.id}">${s.shortName}</button>`
+  ).join('');
+  container.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.subject;
+      if (id === getSubjectForDay(getPermDateStr()).id) {
+        state.manualSubjectId = null;
+      } else {
+        state.manualSubjectId = id;
+      }
+      saveState();
+      renderToday();
+      renderProgressBars();
+    });
+  });
+}
+
+function renderToday() {
+  const todayStr = getPermDateStr();
+  const subject = getSubjectForDay(todayStr);
+
+  document.getElementById('today-icon').textContent = subject.icon;
+  document.getElementById('today-subject').textContent = subject.name;
+
+  // Ensure daily quests exist for today
+  if (state.dailyDate !== todayStr || !state.dailyQuests) {
+    state.dailyQuests = generateDailyQuests(subject);
+    state.dailyDate = todayStr;
+    state.customQuests = state.customQuests || [];
+    saveState();
+  }
+
+  // Re-check if manual subject changed but date same
+  if (state.dailyQuests.length > 0 && state.dailyQuests[0].subjectId !== subject.id) {
+    state.dailyQuests = generateDailyQuests(subject);
+    state.dailyDate = todayStr;
+    saveState();
+  }
+
+  const allQuests = [...state.dailyQuests, ...(state.customQuests || [])];
+  const list = document.getElementById('quest-list');
+
+  if (allQuests.length === 0) {
+    list.innerHTML = '<div class="no-quests">Пока нет задач. Добавьте свою!</div>';
+  } else {
+    list.innerHTML = allQuests.map(q => {
+      const topic = subject.topics.find(t => t.id === q.topicId);
+      const topicLabel = topic ? topic.title.slice(0, 30) + (topic.title.length > 30 ? '…' : '') : '';
+      return `<li class="${q.done ? 'done' : ''}" data-qid="${q.id}">
+        <input type="checkbox" ${q.done ? 'checked' : ''}>
+        <span class="quest-text">${q.text}</span>
+        ${topicLabel ? `<span class="quest-topic">${topicLabel}</span>` : ''}
+      </li>`;
+    }).join('');
+
+    list.querySelectorAll('li').forEach(li => {
+      const cb = li.querySelector('input[type=checkbox]');
+      cb.addEventListener('change', () => toggleQuest(li.dataset.qid));
+    });
+  }
+
+  updateTodayProgress(subject);
+
+  // Re-render tabs to show active state
+  document.querySelectorAll('#subject-tabs button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.subject === subject.id);
+  });
+}
+
+function updateTodayProgress(subject) {
+  const topicsCount = subject.topics.length;
+  const doneTopics = state.completedTopics[subject.id] || {};
+  const doneCount = Object.keys(doneTopics).length;
+  const pct = topicsCount > 0 ? Math.round(doneCount / topicsCount * 100) : 0;
+  const fill = document.getElementById('today-progress-fill');
+  fill.className = 'fill ' + subject.id;
+  fill.style.width = pct + '%';
+  document.getElementById('today-progress-text').textContent = doneCount + ' / ' + topicsCount + ' тем (' + pct + '%)';
+}
+
+function toggleQuest(qid) {
+  // Check if it's a custom quest
+  const cqIdx = (state.customQuests || []).findIndex(q => q.id === qid);
+  if (cqIdx !== -1) {
+    const q = state.customQuests[cqIdx];
+    const wasDone = q.done;
+    q.done = !q.done;
+    if (q.done && !wasDone) {
+      addXP(XP_PER_QUEST);
+    }
+    saveState();
+    renderToday();
+    renderXP();
+    renderStats();
+    return;
+  }
+
+  // Regular quest
+  const q = state.dailyQuests.find(q => q.id === qid);
+  if (!q) return;
+  const wasDone = q.done;
+  q.done = !q.done;
+
+  if (q.done && !wasDone) {
+    // Track completed quest template
+    const subjId = q.subjectId;
+    if (!state.completedQuestTemplates[subjId]) state.completedQuestTemplates[subjId] = {};
+    if (!state.completedQuestTemplates[subjId][q.topicId]) state.completedQuestTemplates[subjId][q.topicId] = [];
+    if (!state.completedQuestTemplates[subjId][q.topicId].includes(q.questIdx)) {
+      state.completedQuestTemplates[subjId][q.topicId].push(q.questIdx);
+    }
+
+    // Check if topic is fully completed
+    const subject = getSubjectById(subjId);
+    const topic = subject.topics.find(t => t.id === q.topicId);
+    if (topic) {
+      const doneIdxs = state.completedQuestTemplates[subjId][q.topicId] || [];
+      if (doneIdxs.length >= topic.quests.length) {
+        if (!state.completedTopics[subjId]) state.completedTopics[subjId] = {};
+        state.completedTopics[subjId][q.topicId] = true;
+        // Fire confetti for completing a topic
+        fireConfetti(1);
+      }
+    }
+
+    addXP(XP_PER_QUEST);
+  }
+
+  saveState();
+  renderToday();
+  renderProgressBars();
+  renderXP();
+  renderStats();
+  renderSubjectTabs();
+}
+
+// ============================================================
+// XP & LEVELS
+// ============================================================
+function addXP(amount) {
+  state.xp += amount;
+  state.totalTasksDone = (state.totalTasksDone || 0) + 1;
+  const newLevel = Math.floor(state.xp / XP_PER_LEVEL) + 1;
+  if (newLevel > state.level) {
+    state.level = newLevel;
+    fireConfetti(3);
+  }
+  saveState();
+}
+
+function renderXP() {
+  const current = state.xp;
+  const level = state.level;
+  const currentLevelXP = (level - 1) * XP_PER_LEVEL;
+  const nextLevelXP = level * XP_PER_LEVEL;
+  const progress = nextLevelXP > currentLevelXP ? (current - currentLevelXP) / (nextLevelXP - currentLevelXP) * 100 : 0;
+  document.getElementById('level-val').textContent = level;
+  document.getElementById('xp-fill').style.width = Math.min(progress, 100) + '%';
+  document.getElementById('xp-current').textContent = current - currentLevelXP;
+  document.getElementById('xp-next').textContent = nextLevelXP - currentLevelXP;
+}
+
+// ============================================================
+// PROGRESS BARS
+// ============================================================
+function renderProgressBars() {
+  const container = document.getElementById('subj-progress');
+  container.innerHTML = subjects.map(s => {
+    const doneTopics = state.completedTopics[s.id] || {};
+    const doneCount = Object.keys(doneTopics).length;
+    const pct = s.topics.length > 0 ? Math.round(doneCount / s.topics.length * 100) : 0;
+    return `<div class="subj-row">
+      <span class="name">${s.shortName}</span>
+      <div class="bar"><div class="fill ${s.id}" style="width:${pct}%"></div></div>
+      <span class="pct">${pct}%</span>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// TIMERS
+// ============================================================
+function updateTimers() {
+  const now = Date.now();
+
+  const deadlineDiff = Math.max(0, DEADLINE.getTime() - now);
+  const examDiff = Math.max(0, EXAM_START.getTime() - now);
+
+  function formatTime(ms) {
+    const totalSec = Math.floor(ms / 1000);
+    const d = Math.floor(totalSec / 86400);
+    const h = Math.floor((totalSec % 86400) / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    return String(d).padStart(2, '0') + ':' +
+      String(h).padStart(2, '0') + ':' +
+      String(m).padStart(2, '0') + ':' +
+      String(s).padStart(2, '0');
+  }
+
+  document.getElementById('deadline-value').textContent = formatTime(deadlineDiff);
+  document.getElementById('exam-value').textContent = formatTime(examDiff);
+
+  // Color indicator for deadline
+  const daysLeft = deadlineDiff / 86400000;
+  const timerEl = document.getElementById('timer-deadline');
+  timerEl.className = 'timer';
+  if (daysLeft > 5) timerEl.classList.add('green');
+  else if (daysLeft >= 2) timerEl.classList.add('yellow');
+  else timerEl.classList.add('red');
+}
+
+// ============================================================
+// STATISTICS
+// ============================================================
+function renderStats() {
+  const grid = document.getElementById('stats-grid');
+  const totalDone = state.totalTasksDone || 0;
+
+  // Days since first possible use (July 2) till now
+  const now = getPermNow();
+  const start = new Date(START_DATE);
+  const daysActive = Math.max(1, daysBetween(start, now) + 1);
+  const pace = (totalDone / daysActive).toFixed(1);
+
+  const totalTopics = subjects.reduce((acc, s) => acc + s.topics.length, 0);
+  const completedTopicsAll = subjects.reduce((acc, s) => {
+    const done = state.completedTopics[s.id] || {};
+    return acc + Object.keys(done).length;
+  }, 0);
+  const remainingTopics = totalTopics - completedTopicsAll;
+
+  const daysUntilExam = Math.max(0, Math.ceil((EXAM_START.getTime() - now.getTime()) / 86400000));
+
+  grid.innerHTML = `
+    <div class="stat-card"><div class="stat-val">${totalDone}</div><div class="stat-label">Всего выполнено задач</div></div>
+    <div class="stat-card"><div class="stat-val">${pace}</div><div class="stat-label">Задач в день</div></div>
+    <div class="stat-card"><div class="stat-val">${daysUntilExam}</div><div class="stat-label">Дней до экзаменов</div></div>
+    <div class="stat-card"><div class="stat-val">${remainingTopics}</div><div class="stat-label">Осталось тем</div></div>
+  `;
+
+  // Assessment
+  const assessment = document.getElementById('stat-assessment');
+  if (remainingTopics === 0) {
+    assessment.className = 'stat-assessment good';
+    assessment.textContent = '🎯 Все темы изучены! Отличная подготовка!';
+  } else if (daysUntilExam <= 0) {
+    assessment.className = 'stat-assessment bad';
+    assessment.textContent = '⚠️ Экзамены уже начались! Сосредоточься на оставшихся темах.';
+  } else {
+    const paceNeeded = remainingTopics / daysUntilExam;
+    if (paceNeeded <= 0.8) {
+      assessment.className = 'stat-assessment good';
+      assessment.textContent = '✅ Успеваешь! Темп достаточный, так держать.';
+    } else if (paceNeeded <= 1.5) {
+      assessment.className = 'stat-assessment warn';
+      assessment.textContent = '⚡ Нужно ускориться! ' + paceNeeded.toFixed(1) + ' темы в день — будь внимательнее.';
+    } else {
+      assessment.className = 'stat-assessment bad';
+      assessment.textContent = '🔴 Рискуешь не успеть! ' + paceNeeded.toFixed(1) + ' темы в день — срочно увеличь темп.';
+    }
+  }
+}
+
+// ============================================================
+// ADD CUSTOM QUEST
+// ============================================================
+function setupAddQuest() {
+  const input = document.getElementById('quest-input');
+  const btn = document.getElementById('quest-add-btn');
+
+  function add() {
+    const text = input.value.trim();
+    if (!text) return;
+    if (!state.customQuests) state.customQuests = [];
+    state.customQuests.push({
+      id: 'cq_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+      text: text,
+      done: false
+    });
+    input.value = '';
+    saveState();
+    renderToday();
+    renderStats();
+  }
+
+  btn.addEventListener('click', add);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') add(); });
+}
+
+// ============================================================
+// CONFETTI
+// ============================================================
+let confettiPieces = [];
+let confettiAnimId = null;
+
+function fireConfetti(intensity) {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const colors = ['#3fb950', '#58a6ff', '#bc8cff', '#d29922', '#f85149', '#79c0ff', '#56d364'];
+  const count = 20 * (intensity || 1);
+
+  for (let i = 0; i < count; i++) {
+    confettiPieces.push({
+      x: canvas.width / 2 + (Math.random() - 0.5) * canvas.width * 0.6,
+      y: canvas.height * (0.1 + Math.random() * 0.15),
+      w: 4 + Math.random() * 4,
+      h: 4 + Math.random() * 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vy: -2 - Math.random() * 4,
+      vx: (Math.random() - 0.5) * 4,
+      rot: Math.random() * Math.PI * 2,
+      rotV: (Math.random() - 0.5) * 0.2,
+      gravity: 0.12 + Math.random() * 0.06,
+      opacity: 1
+    });
+  }
+
+  if (!confettiAnimId) animateConfetti();
+}
+
+function animateConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  let alive = false;
+
+  confettiPieces.forEach(p => {
+    p.vy += p.gravity;
+    p.x += p.vx;
+    p.y += p.vy;
+    p.rot += p.rotV;
+    p.opacity -= 0.006;
+    if (p.opacity <= 0) return;
+    alive = true;
+
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot);
+    ctx.globalAlpha = Math.max(0, p.opacity);
+    ctx.fillStyle = p.color;
+    ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+    ctx.restore();
+  });
+
+  confettiPieces = confettiPieces.filter(p => p.opacity > 0);
+
+  if (alive && confettiPieces.length > 0) {
+    confettiAnimId = requestAnimationFrame(animateConfetti);
+  } else {
+    confettiAnimId = null;
+    confettiPieces = [];
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+}
+
+// ============================================================
+// RESET
+// ============================================================
+function setupReset() {
+  const btn = document.getElementById('reset-btn');
+  const modal = document.getElementById('reset-modal');
+  const cancel = document.getElementById('modal-cancel');
+  const confirm = document.getElementById('modal-confirm');
+
+  btn.addEventListener('click', () => modal.classList.add('open'));
+  cancel.addEventListener('click', () => modal.classList.remove('open'));
+  modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('open'); });
+
+  confirm.addEventListener('click', () => {
+    state = defaultState();
+    saveState();
+    modal.classList.remove('open');
+    fullRender();
+  });
+}
+
+// ============================================================
+// AI GEN SETUP
+// ============================================================
+function setupAIGen() {
+  const btn = document.getElementById('ai-gen-btn');
+  btn.addEventListener('click', generateAIQuest);
+  checkOmniRoute();
+}
+
+function setupTestGen() {
+  document.getElementById('test-gen-btn').addEventListener('click', generateFullTest);
+}
+
+// ============================================================
+// FULL TEST GENERATION (OmniRoute → JSON → Form)
+// ============================================================
+let currentTestData = null;
+let testAnswered = false;
+let currentModel = '';
+let lessonActive = false;
+let lessonAbortController = null;
+let lessonCache = {};
+let lessonOrder = [];
+
+async function generateFullTest() {
+  const btn = document.getElementById('test-gen-btn');
+  if (btn.classList.contains('loading')) return;
+
+  const todayStr = getPermDateStr();
+  const subject = getSubjectForDay(todayStr);
+  const context = AI_CONTEXT[subject.id] || '';
+
+  closeLesson();
+  lessonCache = {};
+  lessonOrder = [];
+  clearTestState();
+  const contentEl = document.getElementById('test-content');
+  contentEl.innerHTML = '<div class="test-loading">⏳ Генерация теста&nbsp;<span class="dots"></span></div>';
+  btn.classList.add('loading');
+  currentTestData = null;
+  testAnswered = false;
+
+  try {
+    const questionsPrompt = 'Ты — методист ПНИПУ. Сгенерируй ровно 15 тестовых вопросов по предмету "' + subject.name + '". Каждый вопрос — множественный выбор, ровно один правильный ответ. Вопросы и ответы — на русском. Уровень сложности — как в образцах ниже. \n\nВажно: Твой ответ ДОЛЖЕН быть ТОЛЬКО JSON без какого-либо другого текста, без markdown-разметки. \n\nФормат JSON:\n{\n  "title": "строка — название теста",\n  "questions": [\n    {\n      "id": 1,\n      "question": "Какая логическая операция даёт 1, если хотя бы один вход равен 1?",\n      "options": ["A) Конъюнкция", "B) Дизъюнкция", "C) Импликация", "D) Эквиваленция"],\n      "correct": "B",\n      "explanation": "Дизъюнкция (ИЛИ) возвращает 1, если хотя бы один операнд равен 1.",\n      "topic": "Логические операции"\n    }\n  ]\n}\n\nГде "correct" — индекс правильного ответа в массиве options (начиная с 1). Поле "explanation" — краткое пояснение для студента после проверки.\n\nОбразцы тестов:\n' + context;
+
+    const resp = await fetch(OMNIROUTE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'auto/smart',
+        messages: [
+          { role: 'system', content: 'Ты — генератор тестов ПНИПУ. Отвечай строго валидным JSON-массивом.\nЗАПРЕТЫ:\n- Не оборачивай ответ в markdown-блоки (никаких ```json).\n- Не добавляй пояснений до или после JSON.\n- Не используй одинарные кавычки вместо двойных.' },
+          { role: 'user', content: questionsPrompt }
+        ],
+        max_tokens: 4000,
+        stream: true,
+        thinking: { type: 'disabled' }
+      })
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error('OmniRoute error: ' + resp.status + ' ' + errText);
+    }
+
+    // SSE streaming
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullContent = '';
+    currentModel = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith('data: ')) continue;
+        const jsonStr = trimmed.slice(6);
+        if (jsonStr === '[DONE]') continue;
+        try {
+          const chunk = JSON.parse(jsonStr);
+          if (chunk.model) currentModel = chunk.model;
+          const delta = chunk.choices?.[0]?.delta;
+          if (delta?.content) fullContent += delta.content;
+        } catch {}
+      }
+    }
+
+    fullContent = fullContent.trim();
+    if (!fullContent) throw new Error('Пустой ответ от AI');
+
+    // Attempt to extract JSON from potential markdown wrapping
+    let jsonMatch = fullContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+    let jsonStr = jsonMatch ? jsonMatch[1].trim() : fullContent;
+
+    // Also try to find first { and last }
+    if (!jsonStr.startsWith('{')) {
+      const start = jsonStr.indexOf('{');
+      const end = jsonStr.lastIndexOf('}');
+      if (start !== -1 && end !== -1) {
+        jsonStr = jsonStr.slice(start, end + 1);
+      }
+    }
+
+    let testData;
+    try {
+      testData = JSON.parse(jsonStr);
+    } catch (e) {
+      throw new Error('Не удалось разобрать JSON ответ AI. Попробуйте ещё раз.');
+    }
+
+    if (!testData.questions || !Array.isArray(testData.questions) || testData.questions.length === 0) {
+      throw new Error('AI вернул пустой тест. Попробуйте ещё раз.');
+    }
+
+    currentTestData = testData;
+    renderTestForm(testData);
+    showModelBadge();
+    saveTestState({}); // save with no selected answers yet
+
+  } catch (err) {
+    console.error('Test generation failed:', err);
+    contentEl.innerHTML = '<div class="test-error">❌ ' + err.message + '</div>';
+  } finally {
+    btn.classList.remove('loading');
+  }
+}
+
+function formatMath(str) {
+  str = str
+    .replace(/\\\(|\\\)|\\\[|\\\]/g, '')
+    .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1/$2')
+    .replace(/\\sqrt(?:\[([^\]]+)\])?\{([^}]+)\}/g, (_, r, v) => r ? `√[${r}](${v})` : `√(${v})`)
+    .replace(/\\(log|ln|lg)(?:_\{?([^}]+)\}?)?/g, (_, f, s) => s ? `${f}_${s}` : f)
+    .replace(/\\(sin|cos|tan|cot|sec|csc|pi|alpha|beta|gamma|cdot|times|to|infty|pm)/g, (_, n) => ({
+      cdot:'·',times:'×',to:'→',infty:'∞',pi:'π',alpha:'α',beta:'β',gamma:'γ',pm:'±'
+    })[n] || n)
+    .replace(/\\text(?:rm|it|bf)?\{([^}]+)\}/g, '$1')
+    .replace(/\\(left|right)/g, '')
+    .replace(/\\([a-zA-Z])/g, '$1');
+
+  return str
+    .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+    .replace(/\^\{([^}]+)\}/g, '<sup>$1</sup>')
+    .replace(/_\{([^}]+)\}/g, '<sub>$1</sub>')
+    .replace(/([\w)\]])\^(\d+(?:[.,]\d+)?)/g, '$1<sup>$2</sup>')
+    .replace(/([\w)\]])\_(\d+(?:[.,]\d+)?)/g, '$1<sub>$2</sub>');
+}
+
+function renderTestForm(testData) {
+  const contentEl = document.getElementById('test-content');
+  const subject = getSubjectForDay(getPermDateStr());
+  document.getElementById('test-title').textContent = testData.title || (subject.name + ' — тренировочный тест');
+
+  let html = '<div class="test-form">';
+  const letters = ['A','B','C','D'];
+  testData.questions.forEach((q, i) => {
+    const opts = Array.isArray(q.options) ? q.options : [];
+    const qText = q.question || q.text;
+    html += '<div class="test-question" data-qid="' + q.id + '">';
+    html += '<div class="q-text"><span class="q-num">' + (i + 1) + '.</span>' + formatMath(qText);
+    html += '<button class="lesson-btn" data-qid="' + q.id + '" title="Открыть урок по теме вопроса">📖 Урок</button>';
+    html += '</div>';
+    html += '<div class="options">';
+    opts.forEach((opt, oi) => {
+      html += '<label class="option">';
+      html += '<input type="radio" name="q_' + q.id + '" value="' + letters[oi] + '">';
+      html += '<span class="opt-label">' + formatMath(opt) + '</span>';
+      html += '<span class="mark"></span>';
+      html += '</label>';
+    });
+    html += '</div></div>';
+  });
+  html += '<button class="test-check-btn" id="test-check-btn">✅ Проверить ответы</button>';
+  html += '</div>';
+  contentEl.innerHTML = html;
+
+  document.getElementById('test-check-btn').addEventListener('click', checkTestAnswers);
+  contentEl.querySelectorAll('.lesson-btn').forEach(btn => {
+    btn.addEventListener('click', () => openLesson(btn.dataset.qid));
+  });
+}
+
+function checkTestAnswers() {
+  if (!currentTestData || testAnswered) return;
+  testAnswered = true;
+
+  let correct = 0;
+  const total = currentTestData.questions.length;
+
+  const titleEl = document.getElementById('test-title');
+
+  const letterToIdx = { 'A':0, 'B':1, 'C':2, 'D':3 };
+  currentTestData.questions.forEach(q => {
+    const qEl = document.querySelector('.test-question[data-qid="' + q.id + '"]');
+    if (!qEl) return;
+
+    const selected = qEl.querySelector('input[type="radio"]:checked');
+    const selectedVal = selected ? selected.value : '';
+    const isCorrect = selectedVal === q.correct;
+
+    // Lock inputs
+    qEl.querySelectorAll('input[type="radio"]').forEach(inp => inp.disabled = true);
+
+    // Highlight
+    if (isCorrect) {
+      qEl.classList.add('correct');
+      correct++;
+    } else {
+      qEl.classList.add('wrong');
+      const options = qEl.querySelectorAll('.option');
+      const correctIdx = letterToIdx[q.correct] ?? (parseInt(q.correct) - 1);
+      if (options[correctIdx]) {
+        options[correctIdx].querySelector('.mark').textContent = '✅';
+      }
+      if (selected) {
+        selected.parentElement.querySelector('.mark').textContent = '❌';
+      }
+      // Show inline explanation from test data
+      if (q.explanation && selectedVal) {
+        const exDiv = document.createElement('div');
+        exDiv.className = 'explanation';
+        exDiv.innerHTML = formatMath(q.explanation.replace(/</g, '&lt;'));
+        qEl.appendChild(exDiv);
+      }
+    }
+  });
+
+  const pct = Math.round(correct / total * 100);
+  const resultEl = document.createElement('div');
+  resultEl.className = 'test-result ' + (pct >= 80 ? 'good' : pct >= 50 ? 'ok' : 'bad');
+  resultEl.textContent = '✅ ' + correct + ' / ' + total + ' (' + pct + '%) — ' +
+    (pct >= 80 ? 'Отлично!' : pct >= 50 ? 'Неплохо, стоит повторить.' : 'Нужно подтянуть знания.');
+
+  const checkBtn = document.getElementById('test-check-btn');
+  checkBtn.replaceWith(resultEl);
+
+  // Add XP for completing the test
+  const xpReward = Math.round(correct * 1.5);
+  if (xpReward > 0) {
+    addXP(xpReward);
+    renderXP();
+    renderStats();
+  }
+
+  // Update title with score
+  titleEl.textContent = titleEl.textContent + ' — ' + correct + '/' + total;
+
+  // Save test state with selected answers
+  const selectedAnswers = {};
+  currentTestData.questions.forEach(q => {
+    const qEl = document.querySelector('.test-question[data-qid="' + q.id + '"]');
+    const sel = qEl?.querySelector('input[type="radio"]:checked');
+    if (sel) selectedAnswers[q.id] = sel.value;
+  });
+  saveTestState(selectedAnswers);
+
+  // New test button
+  const headerEl = document.querySelector('.test-header');
+  if (headerEl) {
+    const newBtn = document.createElement('button');
+    newBtn.className = 'test-gen-btn';
+    newBtn.textContent = '🔄 Новый тест';
+    newBtn.addEventListener('click', () => {
+      closeLesson();
+      testAnswered = false;
+      currentTestData = null;
+      clearTestState();
+      document.getElementById('test-content').innerHTML = '';
+      document.getElementById('test-title').textContent = 'Нажмите «Сгенерировать тест», чтобы получить 15 вопросов по сегодняшнему предмету';
+      generateFullTest();
+    });
+    // Remove old button
+    const oldBtn = document.getElementById('test-gen-btn');
+    if (oldBtn) oldBtn.remove();
+    headerEl.appendChild(newBtn);
+  }
+}
+
+// ============================================================
+// LESSON (split clone)
+// ============================================================
+function closeLesson() {
+  if (!lessonActive) return;
+  lessonActive = false;
+  if (lessonAbortController) {
+    lessonAbortController.abort();
+    lessonAbortController = null;
+  }
+  const wrap = document.getElementById('test-split-wrap');
+  if (wrap) {
+    const section = document.getElementById('test-section');
+    wrap.parentNode.insertBefore(section, wrap);
+    section.classList.remove('split');
+    wrap.remove();
+  }
+}
+
+async function openLesson(qId) {
+  if (!currentTestData) return;
+
+  const q = currentTestData.questions.find(x => String(x.id) === String(qId));
+  if (!q) return;
+
+  // Track order
+  if (!lessonOrder.includes(qId)) lessonOrder.push(qId);
+
+  const renderNav = () => {
+    const idx = lessonOrder.indexOf(qId);
+    const prev = idx > 0 ? lessonOrder[idx - 1] : null;
+    const next = idx < lessonOrder.length - 1 ? lessonOrder[idx + 1] : null;
+    return `<button class="lesson-nav ${prev ? '' : 'disabled'}" data-dir="prev">◀</button>
+<span class="lesson-title-text">📖 Урок по вопросу ${qId}</span>
+<button class="lesson-nav ${next ? '' : 'disabled'}" data-dir="next">▶</button>`;
+  };
+
+  // If lesson panel exists, abort old stream and update in-place
+  const existingPanel = document.getElementById('lesson-panel');
+  if (existingPanel) {
+    if (lessonAbortController) {
+      lessonAbortController.abort();
+      lessonAbortController = null;
+    }
+    // Show cached if available
+    if (lessonCache[qId]) {
+      currentQId = qId;
+      existingPanel.querySelector('.lesson-title').innerHTML = renderNav();
+      existingPanel.querySelector('.lesson-content').innerHTML = lessonCache[qId];
+      existingPanel.scrollTop = 0;
+      bindNav(existingPanel);
+      return;
+    }
+    currentQId = qId;
+    existingPanel.querySelector('.lesson-content').innerHTML = '<div class="lesson-loading">⏳ Загрузка урока&nbsp;<span class="dots"></span></div>';
+    existingPanel.querySelector('.lesson-title').innerHTML = renderNav();
+    existingPanel.scrollTop = 0;
+    bindNav(existingPanel);
+    streamLesson(q, existingPanel.querySelector('.lesson-content'));
+    return;
+  }
+
+  lessonActive = true;
+
+  // Create split wrapper around test-section
+  const section = document.getElementById('test-section');
+  const wrap = document.createElement('div');
+  wrap.id = 'test-split-wrap';
+  section.parentNode.insertBefore(wrap, section);
+  wrap.appendChild(section);
+  section.classList.add('split');
+
+  // Create lesson panel
+  const panel = document.createElement('div');
+  panel.className = 'lesson-panel';
+  panel.id = 'lesson-panel';
+  panel.innerHTML = '<div class="lesson-title">' + renderNav() + '</div><div class="lesson-content" id="lesson-content"></div>';
+  wrap.appendChild(panel);
+
+  const content = document.getElementById('lesson-content');
+  content.innerHTML = '<div class="lesson-loading">⏳ Загрузка урока&nbsp;<span class="dots"></span></div>';
+
+  currentQId = qId;
+  bindNav(panel);
+  streamLesson(q, content);
+}
+
+function bindNav(panel) {
+  panel.querySelectorAll('.lesson-nav').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('disabled')) return;
+      const idx = lessonOrder.indexOf(String(currentQId));
+      const dir = btn.dataset.dir;
+      const nextIdx = dir === 'prev' ? idx - 1 : idx + 1;
+      if (nextIdx >= 0 && nextIdx < lessonOrder.length) {
+        openLesson(lessonOrder[nextIdx]);
+      }
+    });
+  });
+}
+
+let currentQId = null;
+
+async function streamLesson(q, contentEl) {
+  const qId = String(q.id);
+  currentQId = qId;
+  const subject = getSubjectForDay(getPermDateStr());
+
+  lessonAbortController = new AbortController();
+
+  try {
+    const prompt = 'Дисциплина: ' + subject.name + '\nТема: [тема вопроса]\nЗадание студента: ' + (q.question || q.text) + '\n\nДай пошаговую подсказку. На каждом шаге задавай ровно 1 наводящий вопрос. Последний шаг должен подвести студента к границе ответа, но НЕ пересекать её.\n\nПример допустимого шага:\n"Шаг 1. Вспомните таблицу истинности для операции И: когда она даёт 1, а когда 0? Сравните это с первой строкой вашей таблицы."';
+
+    const resp = await fetch(OMNIROUTE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: lessonAbortController.signal,
+      body: JSON.stringify({
+        model: 'auto/smart',
+        messages: [
+          { role: 'system', content: 'Ты — репетитор ПНИПУ, работающий по методу Сократа. Твоя единственная цель — направить студента к самостоятельному открытию ответа через наводящие вопросы и анализ условий.\n\nЖЁСТКИЕ ЗАПРЕТЫ (нарушение недопустимо):\n- НИКОГДА не называй правильный ответ (название операции, формулу, букву варианта, числовое значение).\n- НИКОГДА не используй фразы: "это операция ...", "правильный ответ — ...", "вывод: ...", "значит, F = ...", "мы видим, что ...".\n- НИКОГДА не раскрывай финальный результат внутри шагов. Даже косвенно.\n\nЧто МОЖНО:\n- Напоминать определения базовых понятий (таблицы истинности И, ИЛИ, НЕ, XOR).\n- Задавать наводящие вопросы: "Попробуйте...", "Вспомните...", "Что произойдёт, если...?".\n- Предлагать проверить конкретную строку таблицы.\n- Просить сравнить поведение функции с известными операциями.\n\nФормат: ровно 4 шага. Каждый шаг — 1–2 предложения пояснения + 1 наводящий вопрос. Без предисловий и заключений.' },
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 1500,
+        stream: true,
+        thinking: { type: 'disabled' }
+      })
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error('OmniRoute error: ' + resp.status + ' ' + errText);
+    }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let lessonText = '';
+    let lessonModel = '';
+    contentEl.innerHTML = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith('data: ')) continue;
+        const jsonStr = trimmed.slice(6);
+        if (jsonStr === '[DONE]') continue;
+        try {
+          const chunk = JSON.parse(jsonStr);
+          if (chunk.model) lessonModel = chunk.model;
+          const delta = chunk.choices?.[0]?.delta;
+          if (delta?.content) {
+            lessonText += delta.content;
+            contentEl.innerHTML = formatMath(lessonText.replace(/</g, '&lt;'));
+            contentEl.scrollTop = contentEl.scrollHeight;
+          }
+        } catch {}
+      }
+    }
+
+    if (!lessonText.trim()) {
+      contentEl.innerHTML = '<div class="test-error">❌ Урок не получен. Попробуйте ещё раз.</div>';
+    } else {
+      currentModel = lessonModel;
+      showModelBadge();
+      contentEl.innerHTML = formatMath(lessonText.replace(/</g, '&lt;'));
+      lessonCache[qId] = contentEl.innerHTML;
+      // Update nav for all lesson panels
+      document.querySelectorAll('.lesson-panel').forEach(p => {
+        const titleEl = p.querySelector('.lesson-title');
+        if (titleEl) {
+          const idx = lessonOrder.indexOf(qId);
+          const prev = idx > 0 ? lessonOrder[idx - 1] : null;
+          const next = idx < lessonOrder.length - 1 ? lessonOrder[idx + 1] : null;
+          titleEl.querySelector('[data-dir="prev"]').classList.toggle('disabled', !prev);
+          titleEl.querySelector('[data-dir="next"]').classList.toggle('disabled', !next);
+        }
+      });
+    }
+
+  } catch (err) {
+    if (err.name === 'AbortError') return;
+    console.error('Lesson failed:', err);
+    contentEl.innerHTML = '<div class="test-error">❌ ' + err.message + '</div>';
+  } finally {
+    lessonAbortController = null;
+  }
+}
+
+// ============================================================
+// PERSIST TEST STATE (survives refresh)
+// ============================================================
+function showModelBadge() {
+  if (!currentModel) return;
+  const title = document.getElementById('test-title');
+  if (!title) return;
+  let badge = title.parentNode.querySelector('.model-badge');
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.className = 'model-badge';
+    title.parentNode.insertBefore(badge, title.nextSibling);
+  }
+  badge.textContent = currentModel;
+}
+
+function saveTestState(selected) {
+  if (!currentTestData) return;
+  const payload = {
+    testData: currentTestData,
+    answers: selected,
+    answered: testAnswered
+  };
+  try {
+    localStorage.setItem('savedTest', JSON.stringify(payload));
+  } catch (e) {}
+}
+
+function clearTestState() {
+  localStorage.removeItem('savedTest');
+}
+
+function restoreTestState() {
+  try {
+    const raw = localStorage.getItem('savedTest');
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    if (!saved.testData?.questions?.length) return;
+    // Backward compatibility: old format used numeric correct and 'text' field
+    const firstQ = saved.testData.questions[0];
+    if (!firstQ.question || typeof firstQ.correct !== 'string') {
+      clearTestState();
+      return;
+    }
+    currentTestData = saved.testData;
+    testAnswered = !!saved.answered;
+    renderTestForm(currentTestData);
+    // Restore selected answers
+    if (saved.answers) {
+      Object.entries(saved.answers).forEach(([qId, val]) => {
+        const radio = document.querySelector(`.test-question[data-qid="${qId}"] input[type="radio"][value="${val}"]`);
+        if (radio) radio.checked = true;
+      });
+    }
+    // If test was already checked, re-check it
+    if (testAnswered) {
+      // Manually re-run answer checking logic for display
+      const letterToIdx = { 'A':0, 'B':1, 'C':2, 'D':3 };
+      currentTestData.questions.forEach(q => {
+        const qEl = document.querySelector('.test-question[data-qid="' + q.id + '"]');
+        if (!qEl) return;
+        const selected = qEl.querySelector('input[type="radio"]:checked');
+        const selectedVal = selected ? selected.value : '';
+        const isCorrect = selectedVal === q.correct;
+        qEl.querySelectorAll('input[type="radio"]').forEach(inp => inp.disabled = true);
+        const options = qEl.querySelectorAll('.option');
+        const correctIdx = letterToIdx[q.correct] ?? (parseInt(q.correct) - 1);
+        if (options[correctIdx]) {
+          options[correctIdx].querySelector('.mark').textContent = '✅';
+        }
+        if (isCorrect) {
+          qEl.classList.add('correct');
+        } else {
+          qEl.classList.add('wrong');
+          if (selected) {
+            selected.parentElement.querySelector('.mark').textContent = '❌';
+          }
+        }
+      });
+      const correct = currentTestData.questions.filter(q => {
+        const qEl = document.querySelector('.test-question[data-qid="' + q.id + '"]');
+        const selected = qEl?.querySelector('input[type="radio"]:checked');
+        return selected ? selected.value === q.correct : false;
+      }).length;
+      const total = currentTestData.questions.length;
+      const pct = Math.round(correct / total * 100);
+      const resultEl = document.createElement('div');
+      resultEl.className = 'test-result ' + (pct >= 80 ? 'good' : pct >= 50 ? 'ok' : 'bad');
+      resultEl.textContent = '✅ ' + correct + ' / ' + total + ' (' + pct + '%) — ' +
+        (pct >= 80 ? 'Отлично!' : pct >= 50 ? 'Неплохо, стоит повторить.' : 'Нужно подтянуть знания.');
+      const checkBtn = document.getElementById('test-check-btn');
+      if (checkBtn) checkBtn.replaceWith(resultEl);
+      document.getElementById('test-title').textContent =
+        document.getElementById('test-title').textContent + ' — ' + correct + '/' + total;
+      // Restore explanations from inline test data
+      currentTestData.questions.forEach(q => {
+        if (q.explanation) {
+          const qEl = document.querySelector(`.test-question[data-qid="${q.id}"]`);
+          if (qEl && qEl.classList.contains('wrong')) {
+            let exDiv = qEl.querySelector('.explanation');
+            if (!exDiv) {
+              exDiv = document.createElement('div');
+              exDiv.className = 'explanation';
+              qEl.appendChild(exDiv);
+            }
+            exDiv.innerHTML = formatMath(q.explanation.replace(/</g, '&lt;'));
+          }
+        }
+      });
+      // Add "Новый тест" button
+      const headerEl = document.querySelector('.test-header');
+      if (headerEl && !headerEl.querySelector('.test-gen-btn')) {
+        const newBtn = document.createElement('button');
+        newBtn.className = 'test-gen-btn';
+        newBtn.textContent = '🔄 Новый тест';
+        newBtn.addEventListener('click', () => {
+          closeLesson();
+          testAnswered = false;
+          currentTestData = null;
+          clearTestState();
+          document.getElementById('test-content').innerHTML = '';
+          document.getElementById('test-title').textContent = 'Нажмите «Сгенерировать тест», чтобы получить 15 вопросов по сегодняшнему предмету';
+          generateFullTest();
+        });
+        headerEl.appendChild(newBtn);
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to restore test:', e);
+    clearTestState();
+  }
+}
+
+// ============================================================
+// FULL RENDER
+// ============================================================
+function fullRender() {
+  const todayStr = getPermDateStr();
+  state.lastOpenDate = todayStr;
+
+  // Clear manual subject at new day
+  if (state.lastOpenDate && state.lastOpenDate !== todayStr) {
+    state.manualSubjectId = null;
+  }
+  state.lastOpenDate = todayStr;
+  saveState();
+
+  renderSubjectTabs();
+  renderToday();
+  renderProgressBars();
+  renderXP();
+  renderStats();
+  updateTimers();
+  restoreTestState();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  state = loadState();
+
+  // Handle day transition: clear manual subject
+  const todayStr = getPermDateStr();
+  if (state.lastOpenDate !== todayStr) {
+    state.manualSubjectId = null;
+    state.dailyQuests = null;
+    state.customQuests = [];
+    state.lastOpenDate = todayStr;
+    saveState();
+  }
+
+  setupAddQuest();
+  setupReset();
+  setupAIGen();
+  setupTestGen();
+  fullRender();
+  setInterval(updateTimers, 1000);
+
+  // Handle window resize for confetti canvas
+  window.addEventListener('resize', () => {
+    const canvas = document.getElementById('confetti-canvas');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
